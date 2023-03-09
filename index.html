@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Indie+Flower&family=Mynerve&display=swap" rel="stylesheet">
+
+    <title>Son 30</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <div id="counter">
+        <div class="players">
+            <div class="player1">
+                <h2>Player 1</h2>
+                <input type="number" class="score" value="">
+                <button class="add">Anotame ahi</button>
+                <button class="son30 add">¡Son 30!</button>
+            </div>
+            <div class="player2">
+                <h2>Player 2</h2>
+                <input type="number" class="score" value="">
+                <button class="add">Anotame ahi</button>
+                <button class="son30 add">¡Son 30!</button>
+            </div>
+        </div>
+        <div class="scores">
+            <h2>Cuanto Ta?</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th id="jugador1">Player 1</th>
+                        <th id="jugado2">Player 2</th>
+                    </tr>
+                </thead>
+                <tbody class="score-list">
+                    <tr>
+                        <td>0</td>
+                        <td>0</td>
+                    </tr>
+                </tbody>
+                <tfoot>
+                    <tr>
+                        <td class="player1-total">0</td>
+                        <td class="player2-total">0</td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+        <button class="reset">¡Los que van!</button>
+    </div>
+
+    <script src="./main.js"></script>
+</body>
+
+</html>

@@ -1,0 +1,150 @@
+body{
+    font-family: 'Indie Flower', cursive;
+    width: 80%;
+    max-width: 300px;
+    margin: auto;
+    justify-content: center;
+    text-align: center;
+    background-image: url(./assets/img/fondoDomino.png);
+    background-repeat: no-repeat;
+    background-size: cover;
+    background-position: center;
+    height: 100vh;
+    color: whitesmoke
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+th, td {
+    padding: 2px;
+    text-align: center;
+    border: 1px solid black;
+}
+
+tfoot {
+    font-weight: bold;
+}
+
+.players {
+    display: flex;
+    border: none;
+    margin: auto;
+    justify-content: center;
+}
+
+#counter {
+    max-width: 300px;
+    margin: 0 auto;
+    padding: 0px;
+    padding-top: 4.5rem;
+}
+
+.player1,
+.player2 {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.player1 {
+    margin-right: 5px;
+    padding-right: 20px;
+}
+
+.player2 {
+    margin-left: 5px;
+    padding-left: 20px;
+}
+
+.player1 h2,
+.player2 h2 {
+    font-size: 25px;
+    font-weight: bold;
+    margin-bottom: 10px;
+}
+
+.score {
+    width: 30px;
+    font-size: 12px;
+    padding: 5px 10px;
+    margin-bottom: 10px;
+    border-radius: 5px;
+    border: none;
+}
+
+.add {
+
+    font-size: 16px;
+    padding: 5px 10px;
+    border-radius: 5px;
+    border: none;
+    background-color: #00457e;
+    color: rgb(228, 228, 228);
+    cursor: pointer;
+    transition: background-color 0.3s;
+    font-family: 'Indie Flower', cursive;
+
+}
+
+.son30 {
+    font-size: 18px;
+    padding: 5px 10px;
+    border-radius: 5px;
+    border: none;
+    background-color: #af874c;
+    color: rgb(224, 224, 224);
+    cursor: pointer;
+    transition: background-color 0.3s;
+    margin-top: .5rem;
+}
+
+.scores {
+    margin-top: 20px;
+}
+
+.scores h2 {
+    font-size: 20px;
+    font-weight: bold;
+    margin-bottom: 10px;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    border: 1.5px solid rgb(187, 187, 187);
+}
+
+th, td {
+    text-align: center;
+    font-size: 18px;
+    border: 1px solid rgb(206, 206, 206);
+
+}
+
+thead tr {
+    background-color: #014940;
+    color: white;
+}
+
+tfoot tr {
+    background-color: #014940;
+    font-weight: bold;
+}
+
+.reset {
+    font-size: 18px;
+    padding: 5px 10px;
+    border-radius: 5px;
+    border: none;
+    background-color: #c51609;
+    color: rgb(241, 241, 241);
+    cursor: pointer;
+    margin-top: 20px;
+    transition: background-color 0.3s;
+    font-family: 'Mynerve', cursive;
+
+
+}
