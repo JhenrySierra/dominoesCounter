@@ -1,7 +1,17 @@
-/*let jugador1 = prompt("Quiene son?");
+let jugador1 = prompt("Quiene son?");
 let jugador2 = prompt("Contra quiene?")
-*/
-document.getElementById('jugador1')
+
+const player1Name = document.getElementById('player1Name')
+const player2Name = document.getElementById('player2Name')
+
+const player1Nametable = document.getElementById('jugador1')
+const player2Nametable = document.getElementById('jugador2')
+
+player1Name.innerHTML = jugador1;
+player2Name.innerHTML = jugador2;
+
+player1Nametable.innerHTML = jugador1
+player2Nametable.innerHTML = jugador2
 
 // Select the input elements, add score buttons, reset button, and score list
 const player1Score = document.querySelector('.player1 .score');
