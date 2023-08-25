@@ -44,6 +44,7 @@ tfoot {
     margin: 0 auto;
     padding: 0px;
     padding-top: 4.5rem;
+    display: none;
 }
 
 .player1,
