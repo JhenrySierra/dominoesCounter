@@ -54,8 +54,8 @@ resetButton.addEventListener("click", () => {
     const confirmation = window.confirm("Reiniciar puntaje?");
 
     if (confirmation) {
-        scores1 = [];
-        scores2 = [];
+        scores1 = [0];
+        scores2 = [0];
         updateScoreList(scoreList, scores1, scores2);
         player1Score.value = 0;
         player2Score.value = 0;
