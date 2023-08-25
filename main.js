@@ -32,13 +32,18 @@ addButtons.forEach((button) => {
         const player = button.parentElement;
         const input = player.querySelector(".score");
         let score = parseInt(input.value);
-        if (player.classList.contains("player1")) {
-            scores1.push(score);
-            updateScoreList(scoreList, scores1, scores2);
-        } else {
-            scores2.push(score);
-            updateScoreList(scoreList, scores1, scores2);
+        
+        // Check if the score is a valid number and not zero
+        if (!isNaN(score) && score !== 0) {
+            if (player.classList.contains("player1")) {
+                scores1.push(score);
+                updateScoreList(scoreList, scores1, scores2);
+            } else {
+                scores2.push(score);
+                updateScoreList(scoreList, scores1, scores2);
+            }
         }
+        
         input.value = 0;
     });
 });
