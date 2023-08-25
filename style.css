@@ -1,6 +1,6 @@
 body{
-    font-family: 'Indie Flower', cursive;
-    width: 80%;
+    font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
+    width: 100%;
     max-width: 300px;
     margin: auto;
     justify-content: center;
@@ -10,7 +10,8 @@ body{
     background-size: cover;
     background-position: center;
     height: 100vh;
-    color: whitesmoke
+    color: whitesmoke;
+
 }
 
 table {
@@ -22,6 +23,7 @@ th, td {
     padding: 2px;
     text-align: center;
     border: 1px solid black;
+
 }
 
 tfoot {
@@ -32,11 +34,12 @@ tfoot {
     display: flex;
     border: none;
     margin: auto;
+    margin-top: 2rem;
     justify-content: center;
 }
 
 #counter {
-    max-width: 300px;
+    max-width: 100%;
     margin: 0 auto;
     padding: 0px;
     padding-top: 4.5rem;
@@ -77,7 +80,7 @@ tfoot {
 
 .add {
 
-    font-size: 16px;
+    font-size: 14px;
     padding: 5px 10px;
     border-radius: 5px;
     border: none;
@@ -85,12 +88,11 @@ tfoot {
     color: rgb(228, 228, 228);
     cursor: pointer;
     transition: background-color 0.3s;
-    font-family: 'Indie Flower', cursive;
 
 }
 
 .son30 {
-    font-size: 18px;
+    font-size: 16px;
     padding: 5px 10px;
     border-radius: 5px;
     border: none;
@@ -106,7 +108,7 @@ tfoot {
 }
 
 .scores h2 {
-    font-size: 20px;
+    font-size: 18px;
     font-weight: bold;
     margin-bottom: 10px;
 }
@@ -119,7 +121,7 @@ table {
 
 th, td {
     text-align: center;
-    font-size: 18px;
+    font-size: 16px;
     border: 1px solid rgb(206, 206, 206);
 
 }
@@ -128,6 +130,7 @@ thead tr {
     background-color: #014940;
     color: white;
 }
+
 
 tfoot tr {
     background-color: #014940;
@@ -144,7 +147,5 @@ tfoot tr {
     cursor: pointer;
     margin-top: 20px;
     transition: background-color 0.3s;
-    font-family: 'Mynerve', cursive;
-
 
 }
