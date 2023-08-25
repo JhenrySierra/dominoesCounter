@@ -45,12 +45,18 @@ addButtons.forEach((button) => {
 
 // Add event listener to reset button
 resetButton.addEventListener("click", () => {
-    scores1 = [];
-    scores2 = [];
-    updateScoreList(scoreList, scores1, scores2);
-    player1Score.value = 0;
-    player2Score.value = 0;
+    // Display a confirmation alert
+    const confirmation = window.confirm("Reiniciar puntaje?");
+
+    if (confirmation) {
+        scores1 = [];
+        scores2 = [];
+        updateScoreList(scoreList, scores1, scores2);
+        player1Score.value = 0;
+        player2Score.value = 0;
+    }
 });
+
 
 // Function to update the score list
 function updateScoreList(list, scores1, scores2) {
