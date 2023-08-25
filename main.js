@@ -1,3 +1,15 @@
+window.onload = function() {
+    // Hide the loading screen
+    const loadingScreen = document.getElementById('loading-screen');
+    loadingScreen.style.display = 'none';
+    
+    // Show the app content
+    const appContent = document.getElementById('counter');
+    appContent.style.display = 'block';
+    
+    // Your app initialization code goes here
+};
+
 let jugador1 = prompt("Quiene son?");
 let jugador2 = prompt("Contra quiene?");
 
