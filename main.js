@@ -761,33 +761,74 @@ function processScanFrame() {
     const cropX = (cameraCanvas.width - cropW) / 2;
     const cropY = (cameraCanvas.height - cropH) / 2;
     
+    // Downscale crop for robust resolution-independent connected component blob-finding
+    const processingWidth = 300;
+    const processingHeight = Math.round((cropH / cropW) * processingWidth);
+    
     const tempCanvas = document.createElement("canvas");
-    tempCanvas.width = cropW;
-    tempCanvas.height = cropH;
+    tempCanvas.width = processingWidth;
+    tempCanvas.height = processingHeight;
     const tempCtx = tempCanvas.getContext("2d");
-    tempCtx.drawImage(cameraCanvas, cropX, cropY, cropW, cropH, 0, 0, cropW, cropH);
+    
+    tempCtx.drawImage(cameraCanvas, cropX, cropY, cropW, cropH, 0, 0, processingWidth, processingHeight);
+    
+    const imgData = tempCtx.getImageData(0, 0, processingWidth, processingHeight);
+    const data = imgData.data;
     
     const thresholdVal = parseInt(scannerThreshold.value);
     const invertVal = scannerInvert.checked;
     
-    const blobs = detectDominoDots(tempCtx, cropW, cropH, thresholdVal, invertVal);
+    const binary = new Uint8Array(processingWidth * processingHeight);
+    
+    for (let i = 0; i < data.length; i += 4) {
+        const r = data[i];
+        const g = data[i+1];
+        const b = data[i+2];
+        const gray = 0.299 * r + 0.587 * g + 0.114 * b;
+        
+        const idx = i / 4;
+        let isPip = 0;
+        if (invertVal) {
+            isPip = gray > thresholdVal ? 1 : 0;
+        } else {
+            isPip = gray < thresholdVal ? 1 : 0;
+        }
+        binary[idx] = isPip;
+        
+        // Show binarized pixels on screen for user visual calibration
+        const color = isPip ? 0 : 255;
+        data[i] = color;
+        data[i+1] = color;
+        data[i+2] = color;
+    }
+    
+    tempCtx.putImageData(imgData, 0, 0);
+    
+    // Render the processed preview on the main viewfinder canvas
+    ctx.drawImage(tempCanvas, 0, 0, processingWidth, processingHeight, cropX, cropY, cropW, cropH);
+    
+    const blobs = findCircularBlobs(binary, processingWidth, processingHeight);
     detectedDotCount = blobs.length;
     
+    // Render detection indicators on top of preview
     ctx.lineWidth = Math.max(3, cameraCanvas.width * 0.005);
-    ctx.strokeStyle = "#f59e0b"; // Gold stroke
+    ctx.strokeStyle = "#10b981"; // Emerald green circles
     
     blobs.forEach(blob => {
-        const absX = cropX + blob.x;
-        const absY = cropY + blob.y;
+        const scaleX = cropW / processingWidth;
+        const scaleY = cropH / processingHeight;
+        
+        const absX = cropX + (blob.x * scaleX);
+        const absY = cropY + (blob.y * scaleY);
         
         ctx.beginPath();
-        const radius = Math.max(6, Math.sqrt(blob.area / Math.PI) + 4);
+        const radius = Math.max(8, Math.sqrt(blob.area * scaleX * scaleY / Math.PI) + 4);
         ctx.arc(absX, absY, radius, 0, 2 * Math.PI);
         ctx.stroke();
         
-        ctx.fillStyle = "#ef4444"; // Red dot center
+        ctx.fillStyle = "#ef4444"; // Red core dot
         ctx.beginPath();
-        ctx.arc(absX, absY, 3, 0, 2 * Math.PI);
+        ctx.arc(absX, absY, 4, 0, 2 * Math.PI);
         ctx.fill();
     });
     
@@ -798,31 +839,13 @@ function processScanFrame() {
     scannerConfirmActions.style.display = "flex";
 }
 
-function detectDominoDots(ctx, width, height, threshold, invert) {
-    const imgData = ctx.getImageData(0, 0, width, height);
-    const data = imgData.data;
-    
-    const binary = new Uint8Array(width * height);
+function findCircularBlobs(binary, width, height) {
     const visited = new Uint8Array(width * height);
-    
-    for (let i = 0; i < data.length; i += 4) {
-        const r = data[i];
-        const g = data[i+1];
-        const b = data[i+2];
-        const gray = 0.299 * r + 0.587 * g + 0.114 * b;
-        
-        const idx = i / 4;
-        if (invert) {
-            binary[idx] = gray > threshold ? 1 : 0;
-        } else {
-            binary[idx] = gray < threshold ? 1 : 0;
-        }
-    }
-    
     const blobs = [];
-    const cropArea = width * height;
-    const minArea = Math.max(8, cropArea * 0.0001);
-    const maxArea = Math.max(350, cropArea * 0.012);
+    
+    // Bounding box area limits on a downscaled 300px canvas
+    const minArea = 10;
+    const maxArea = 450;
     
     for (let y = 0; y < height; y++) {
         for (let x = 0; x < width; x++) {
@@ -832,6 +855,9 @@ function detectDominoDots(ctx, width, height, threshold, invert) {
                 const blobPixels = [];
                 const queue = [[x, y]];
                 visited[idx] = 1;
+                
+                let minX = x, maxX = x;
+                let minY = y, maxY = y;
                 
                 while (queue.length > 0) {
                     const [cx, cy] = queue.shift();
@@ -850,27 +876,41 @@ function detectDominoDots(ctx, width, height, threshold, invert) {
                             if (binary[nIdx] === 1 && visited[nIdx] === 0) {
                                 visited[nIdx] = 1;
                                 queue.push([nx, ny]);
+                                
+                                if (nx < minX) minX = nx;
+                                if (nx > maxX) maxX = nx;
+                                if (ny < minY) minY = ny;
+                                if (ny > maxY) maxY = ny;
                             }
                         }
                     }
                 }
                 
                 const area = blobPixels.length;
+                
                 if (area >= minArea && area <= maxArea) {
-                    let sumX = 0;
-                    let sumY = 0;
-                    blobPixels.forEach(([px, py]) => {
-                        sumX += px;
-                        sumY += py;
-                    });
-                    const centerX = sumX / area;
-                    const centerY = sumY / area;
+                    const bbW = maxX - minX + 1;
+                    const bbH = maxY - minY + 1;
+                    const aspectRatio = bbW / bbH;
+                    const fullness = area / (bbW * bbH);
                     
-                    blobs.push({
-                        x: centerX,
-                        y: centerY,
-                        area: area
-                    });
+                    // Filter: must be square/circle aspect ratio, occupy solid mass, and not exceed pip limit size
+                    if (aspectRatio >= 0.5 && aspectRatio <= 2.0 && fullness >= 0.4 && bbW <= 30 && bbH <= 30) {
+                        let sumX = 0;
+                        let sumY = 0;
+                        blobPixels.forEach(([px, py]) => {
+                            sumX += px;
+                            sumY += py;
+                        });
+                        const centerX = sumX / area;
+                        const centerY = sumY / area;
+                        
+                        blobs.push({
+                            x: centerX,
+                            y: centerY,
+                            area: area
+                        });
+                    }
                 }
             }
         }
