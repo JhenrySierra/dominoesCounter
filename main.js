@@ -630,7 +630,6 @@ let scannerStream = null;
 let scannerActive = false;
 let activeCameraTargetInput = null;
 let detectedDotCount = 0;
-let scanAnimationFrameId = null;
 
 // Attach scan click handlers to score input camera icons
 document.querySelectorAll(".btn-scan").forEach(btn => {
@@ -650,10 +649,6 @@ function stopCameraScanner() {
     if (scannerStream) {
         scannerStream.getTracks().forEach(track => track.stop());
         scannerStream = null;
-    }
-    if (scanAnimationFrameId) {
-        cancelAnimationFrame(scanAnimationFrameId);
-        scanAnimationFrameId = null;
     }
     scannerActive = false;
     cameraModal.classList.remove("show");
@@ -681,12 +676,6 @@ function startCameraScanner() {
         .then(stream => {
             scannerStream = stream;
             cameraFeed.srcObject = stream;
-            
-            cameraFeed.onloadedmetadata = () => {
-                cameraCanvas.width = cameraFeed.videoWidth;
-                cameraCanvas.height = cameraFeed.videoHeight;
-                tickScanner();
-            };
         })
         .catch(err => {
             console.error("No se pudo acceder a la cámara: ", err);
@@ -695,25 +684,12 @@ function startCameraScanner() {
         });
 }
 
-function tickScanner() {
-    if (!scannerActive) return;
-    
-    const ctx = cameraCanvas.getContext("2d");
-    ctx.clearRect(0, 0, cameraCanvas.width, cameraCanvas.height);
-    
-    scanAnimationFrameId = requestAnimationFrame(tickScanner);
-}
-
 if (triggerScanBtn) {
     triggerScanBtn.addEventListener("click", () => {
         if (!scannerStream) return;
         
         cameraFeed.pause();
         scannerActive = false;
-        if (scanAnimationFrameId) {
-            cancelAnimationFrame(scanAnimationFrameId);
-        }
-        
         processScanFrame();
     });
 }
@@ -752,16 +728,50 @@ if (acceptScanBtn) {
     });
 });
 
+function drawVideoWithCover(ctx, video, canvasWidth, canvasHeight) {
+    const videoWidth = video.videoWidth;
+    const videoHeight = video.videoHeight;
+    
+    const canvasRatio = canvasWidth / canvasHeight;
+    const videoRatio = videoWidth / videoHeight;
+    
+    let sx, sy, sWidth, sHeight;
+    
+    if (videoRatio > canvasRatio) {
+        // Video is wider than canvas (crop left/right)
+        sWidth = videoHeight * canvasRatio;
+        sHeight = videoHeight;
+        sx = (videoWidth - sWidth) / 2;
+        sy = 0;
+    } else {
+        // Video is taller than canvas (crop top/bottom)
+        sWidth = videoWidth;
+        sHeight = videoWidth / canvasRatio;
+        sx = 0;
+        sy = (videoHeight - sHeight) / 2;
+    }
+    
+    ctx.drawImage(video, sx, sy, sWidth, sHeight, 0, 0, canvasWidth, canvasHeight);
+}
+
 function processScanFrame() {
     const ctx = cameraCanvas.getContext("2d");
-    ctx.drawImage(cameraFeed, 0, 0, cameraCanvas.width, cameraCanvas.height);
     
-    const cropW = cameraCanvas.width * 0.7;
-    const cropH = cameraCanvas.height * 0.7;
-    const cropX = (cameraCanvas.width - cropW) / 2;
-    const cropY = (cameraCanvas.height - cropH) / 2;
+    // Size canvas internal resolution to pixel-perfect match display coordinates
+    const displayWidth = cameraCanvas.clientWidth || 400;
+    const displayHeight = cameraCanvas.clientHeight || 300;
+    cameraCanvas.width = displayWidth;
+    cameraCanvas.height = displayHeight;
     
-    // Downscale crop for robust resolution-independent connected component blob-finding
+    // Draw paused frame mapping cover zoom
+    drawVideoWithCover(ctx, cameraFeed, displayWidth, displayHeight);
+    
+    const cropW = displayWidth * 0.7;
+    const cropH = displayHeight * 0.7;
+    const cropX = (displayWidth - cropW) / 2;
+    const cropY = (displayHeight - cropH) / 2;
+    
+    // Downscale target region for connected components binarization
     const processingWidth = 300;
     const processingHeight = Math.round((cropH / cropW) * processingWidth);
     
@@ -770,6 +780,7 @@ function processScanFrame() {
     tempCanvas.height = processingHeight;
     const tempCtx = tempCanvas.getContext("2d");
     
+    // Copy the cropped/scaled region into temp for analysis
     tempCtx.drawImage(cameraCanvas, cropX, cropY, cropW, cropH, 0, 0, processingWidth, processingHeight);
     
     const imgData = tempCtx.getImageData(0, 0, processingWidth, processingHeight);
@@ -795,23 +806,20 @@ function processScanFrame() {
         }
         binary[idx] = isPip;
         
-        // Show binarized pixels on screen for user visual calibration
         const color = isPip ? 0 : 255;
         data[i] = color;
         data[i+1] = color;
         data[i+2] = color;
     }
-    
     tempCtx.putImageData(imgData, 0, 0);
     
-    // Render the processed preview on the main viewfinder canvas
+    // Draw binarized preview
     ctx.drawImage(tempCanvas, 0, 0, processingWidth, processingHeight, cropX, cropY, cropW, cropH);
     
     const blobs = findCircularBlobs(binary, processingWidth, processingHeight);
     detectedDotCount = blobs.length;
     
-    // Render detection indicators on top of preview
-    ctx.lineWidth = Math.max(3, cameraCanvas.width * 0.005);
+    ctx.lineWidth = 3;
     ctx.strokeStyle = "#10b981"; // Emerald green circles
     
     blobs.forEach(blob => {
@@ -822,13 +830,13 @@ function processScanFrame() {
         const absY = cropY + (blob.y * scaleY);
         
         ctx.beginPath();
-        const radius = Math.max(8, Math.sqrt(blob.area * scaleX * scaleY / Math.PI) + 4);
+        const radius = Math.max(6, Math.sqrt(blob.area * scaleX * scaleY / Math.PI) + 3);
         ctx.arc(absX, absY, radius, 0, 2 * Math.PI);
         ctx.stroke();
         
         ctx.fillStyle = "#ef4444"; // Red core dot
         ctx.beginPath();
-        ctx.arc(absX, absY, 4, 0, 2 * Math.PI);
+        ctx.arc(absX, absY, 3, 0, 2 * Math.PI);
         ctx.fill();
     });
     
@@ -843,7 +851,6 @@ function findCircularBlobs(binary, width, height) {
     const visited = new Uint8Array(width * height);
     const blobs = [];
     
-    // Bounding box area limits on a downscaled 300px canvas
     const minArea = 10;
     const maxArea = 450;
     
@@ -894,7 +901,6 @@ function findCircularBlobs(binary, width, height) {
                     const aspectRatio = bbW / bbH;
                     const fullness = area / (bbW * bbH);
                     
-                    // Filter: must be square/circle aspect ratio, occupy solid mass, and not exceed pip limit size
                     if (aspectRatio >= 0.5 && aspectRatio <= 2.0 && fullness >= 0.4 && bbW <= 30 && bbH <= 30) {
                         let sumX = 0;
                         let sumY = 0;
